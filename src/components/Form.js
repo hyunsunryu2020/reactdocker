@@ -1,4 +1,5 @@
 import React from "react";
+import { Configuration, OpenAIApi } from "openai";
 
 class Form extends React.Component {
   constructor(props) {
@@ -12,8 +13,25 @@ class Form extends React.Component {
     this.setState({ value: event.target.value });
   }
   handleSubmit(event) {
-    console.log("Form submitted: " + this.state.value);
+    const configuration = new Configuration({
+      apiKey: "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",
+      // apiKey: process.env.REACT_APP_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
 
+    const response = openai.createCompletion("text-curie-001", {
+      prompt: this.state.value + "\nSummarize the above text:",
+      temperature: 0.7,
+      max_tokens: 256,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+
+    console.log(response);
+    response.item.map((data) => {
+      console.log(data.choices[0].text);
+    });
     event.preventDefault();
   }
 
@@ -37,6 +55,8 @@ class Form extends React.Component {
                   rows="5"
                   name="message"
                   placeholder="Lorum Ipsum"
+                  value={this.state.value}
+                  onChange={this.handleChange}
                   class="py-2 px-3 w-full placeholder-gray-300 rounded-md border border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-100 focus:outline-none"
                   required
                 ></textarea>
