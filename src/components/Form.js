@@ -14,24 +14,35 @@ class Form extends React.Component {
   }
   handleSubmit(event) {
     const configuration = new Configuration({
-      apiKey: "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",
+      apiKey: "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",
       // apiKey: process.env.REACT_APP_API_KEY,
     });
     const openai = new OpenAIApi(configuration);
 
-    const response = openai.createCompletion("text-curie-001", {
-      prompt: this.state.value + "\nSummarize the above text:",
-      temperature: 0.7,
-      max_tokens: 256,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-    });
+    try {
+      const response = openai.createCompletion("text-curie-001", {
+        prompt: this.state.value + "\nSummarize the above text:",
+        temperature: 0.7,
+        max_tokens: 50,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      });
+      // const obj = JSON.parse(response);
 
-    console.log(response);
-    response.item.map((data) => {
-      console.log(data.choices[0].text);
-    });
+      // var string = '{"x":5,"y":6}';
+      console.log(response["choices"][0]["text"]);
+      var temp = JSON.stringify(response);
+      console.log(typeof temp);
+      console.log(temp);
+      var obj = JSON.parse(temp);
+      console.log(typeof obj);
+      console.log(obj["choices"]);
+    } catch (error) {
+      error.value = error.message;
+      console.log(error.value);
+    }
+
     event.preventDefault();
   }
 
