@@ -8,13 +8,12 @@ COPY package.json ./
 COPY package-lock.json ./
 
 RUN npm install
+RUN npm install -g serve
 
 # Bundle app source
 COPY . ./
 
 RUN chown -R node:node /app/node_modules
-
-EXPOSE 3000
 
 # start app
 CMD ["npm", "start"]

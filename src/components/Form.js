@@ -4,44 +4,50 @@ import { Configuration, OpenAIApi } from "openai";
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { value: "" };
-    this.handleChange = this.handleChange.bind(this);
+    this.state = { input: "", output: "", number: 50 };
+    this.inputChange = this.inputChange.bind(this);
+    this.numberChange = this.numberChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleChange(event) {
-    this.setState({ value: event.target.value });
+  numberChange(event) {
+    this.setState({ number: event.target.value });
+  }
+
+  inputChange(event) {
+    this.setState({ input: event.target.value });
   }
   handleSubmit(event) {
+    // console.log(process.env.REACT_APP_API_KEY);
     const configuration = new Configuration({
-      apiKey: "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",
-      // apiKey: process.env.REACT_APP_API_KEY,
+      apiKey: process.env.REACT_APP_API_KEY,
     });
     const openai = new OpenAIApi(configuration);
-
-    try {
-      const response = openai.createCompletion("text-curie-001", {
-        prompt: this.state.value + "\nSummarize the above text:",
-        temperature: 0.7,
-        max_tokens: 50,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      });
-      // const obj = JSON.parse(response);
-
-      // var string = '{"x":5,"y":6}';
-      console.log(response["choices"][0]["text"]);
-      var temp = JSON.stringify(response);
-      console.log(typeof temp);
-      console.log(temp);
-      var obj = JSON.parse(temp);
-      console.log(typeof obj);
-      console.log(obj["choices"]);
-    } catch (error) {
-      error.value = error.message;
-      console.log(error.value);
-    }
+    // console.log(this.state);
+    (async () => {
+      try {
+        const response = await openai.createCompletion("text-curie-001", {
+          prompt:
+            this.state.input +
+            "\nSummarize the above text in " +
+            this.state.number +
+            " words or less:",
+          temperature: 0.7,
+          max_tokens: this.state.number * 5,
+          top_p: 1,
+          frequency_penalty: 0,
+          presence_penalty: 0,
+        });
+        var summarized = response.data.choices[0].text;
+        while (summarized[0] === "\n") {
+          summarized = summarized.substring(1);
+        }
+        this.setState({ output: summarized });
+      } catch (e) {
+        e.value = e.message;
+        console.log(e.value);
+      }
+    })();
 
     event.preventDefault();
   }
@@ -52,28 +58,56 @@ class Form extends React.Component {
         <div class="p-5 my-10 mx-auto max-w-4xl bg-white rounded-md shadow-sm">
           <div class="text-center">
             <p class="text-gray-400">
-              Enter your text or upload a file to summarize
+              Enter text below or upload a file to summarize
             </p>
           </div>
           <div>
             <form onSubmit={this.handleSubmit} method="POST">
               <div class="mb-6">
                 <label for="message" class="block mb-2 text-sm text-gray-600">
-                  Text to summarize
+                  Text to summarize:
                 </label>
 
                 <textarea
                   rows="5"
-                  name="message"
+                  name="input"
                   placeholder="Lorum Ipsum"
-                  value={this.state.value}
-                  onChange={this.handleChange}
+                  value={this.state.input}
+                  onChange={this.inputChange}
                   class="py-2 px-3 w-full placeholder-gray-300 rounded-md border border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-100 focus:outline-none"
                   required
                 ></textarea>
               </div>
 
-              <div class="mb-6">
+              <div class="float-left mb-6">
+                <label
+                  for="language"
+                  type="select"
+                  class="block mb-2 text-sm text-gray-600"
+                >
+                  Language
+                </label>
+                <select>
+                  <option defaultValue value="English">
+                    English
+                  </option>
+                  <option value="Mandarin">Mandarin</option>
+                  <option value="Hindu">Hindu</option>
+                </select>
+              </div>
+
+              <div class="float-left px-16 mb-6">
+                <label for="number" class="block mb-2 text-sm text-gray-600">
+                  Max Words:
+                </label>
+                <input
+                  type="number"
+                  value={this.state.number}
+                  onChange={this.numberChange}
+                />
+              </div>
+
+              <div class="float-right px-10 mb-6">
                 <label
                   for="file"
                   type="file"
@@ -82,6 +116,7 @@ class Form extends React.Component {
                   Choose file
                 </label>
                 <input type="file" name="file" />
+                {/* // todo: convert file to text and populate input field in form */}
               </div>
 
               <div class="mb-6">
@@ -89,8 +124,23 @@ class Form extends React.Component {
                   type="submit"
                   class="py-4 px-2 w-full text-white bg-indigo-500 rounded-md focus:bg-indigo-600 focus:outline-none"
                 >
-                  Send Message
+                  Summarize
                 </button>
+              </div>
+
+              <div class="mb-6">
+                <label for="message" class="block mb-2 text-sm text-gray-600">
+                  Summarized Text:
+                </label>
+
+                <textarea
+                  rows="5"
+                  name="output"
+                  placeholder="Summarized text"
+                  value={this.state.output}
+                  readOnly
+                  class="py-2 px-3 w-full placeholder-gray-300 rounded-md border border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-100 focus:outline-none"
+                ></textarea>
               </div>
             </form>
           </div>
