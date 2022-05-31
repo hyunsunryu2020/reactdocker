@@ -4,12 +4,15 @@ import { Configuration, OpenAIApi } from "openai";
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { input: "", output: "", number: 50 };
+    this.state = { input: "", output: "", number: 50 , language: ""};
+    this.languageChange = this.languageChange.bind(this);
     this.inputChange = this.inputChange.bind(this);
+    this.inputFileChange = this.inputFileChange.bind(this);
     this.numberChange = this.numberChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  
   numberChange(event) {
     this.setState({ number: event.target.value });
   }
@@ -17,10 +20,30 @@ class Form extends React.Component {
   inputChange(event) {
     this.setState({ input: event.target.value });
   }
+
+  languageChange(event){
+    this.setState({ language: event.target.value });
+    this.state.language = event.target.value;
+  }
+
+  inputFileChange(event){
+    event.preventDefault();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target.result;
+        //console.log(text);
+        this.setState({input: text});
+        
+      };
+      reader.readAsText(event.target.files[0]);
+      //this.setState({input: reader.readAsText(event.target.files[0])});
+  }
+
   handleSubmit(event) {
     // console.log(process.env.REACT_APP_API_KEY);
+    console.log(this.state.language);
     const configuration = new Configuration({
-      apiKey: process.env.REACT_APP_API_KEY,
+      apiKey: "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",
     });
     const openai = new OpenAIApi(configuration);
     // console.log(this.state);
@@ -29,20 +52,22 @@ class Form extends React.Component {
         const response = await openai.createCompletion("text-curie-001", {
           prompt:
             this.state.input +
-            "\nSummarize the above text in " +
-            this.state.number +
-            " words or less:",
+            "Summarize above text in" + this.state.number + 
+            " words or less " + "and translate into" + this.state.language,
           temperature: 0.7,
           max_tokens: this.state.number * 5,
           top_p: 1,
           frequency_penalty: 0,
           presence_penalty: 0,
         });
+
         var summarized = response.data.choices[0].text;
         while (summarized[0] === "\n") {
           summarized = summarized.substring(1);
         }
         this.setState({ output: summarized });
+   
+      
       } catch (e) {
         e.value = e.message;
         console.log(e.value);
@@ -51,6 +76,7 @@ class Form extends React.Component {
 
     event.preventDefault();
   }
+
 
   render() {
     return (
@@ -75,7 +101,7 @@ class Form extends React.Component {
                   value={this.state.input}
                   onChange={this.inputChange}
                   class="py-2 px-3 w-full placeholder-gray-300 rounded-md border border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-100 focus:outline-none"
-                  required
+      
                 ></textarea>
               </div>
 
@@ -87,12 +113,12 @@ class Form extends React.Component {
                 >
                   Language
                 </label>
-                <select>
-                  <option defaultValue value="English">
+                <select type="language" value={this.state.language} onChange={this.languageChange}>
+                  <option value="English">
                     English
                   </option>
                   <option value="Mandarin">Mandarin</option>
-                  <option value="Hindu">Hindu</option>
+                  <option value="Hindi">Hindi</option>
                 </select>
               </div>
 
@@ -115,8 +141,9 @@ class Form extends React.Component {
                 >
                   Choose file
                 </label>
-                <input type="file" name="file" />
-                {/* // todo: convert file to text and populate input field in form */}
+                <input type="file" name="file"
+                onChange={this.inputFileChange}/>
+                
               </div>
 
               <div class="mb-6">
